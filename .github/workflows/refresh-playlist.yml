@@ -1,0 +1,33 @@
+name: Refresh playlist
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Generate playlist
+        run: python3 cdnlivetv_m3u.py
+
+      - name: Commit updated playlist
+        run: |
+          git config user.name "chapkazi25"
+          git config user.email "chapkazi25@gmail.com"
+          git add cdnlivetv_english.m3u8
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh playlist"
+            git push
+          else
+            echo "No changes to commit"
+          fi
