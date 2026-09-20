@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "0 */6 * * *"
 
+concurrency:
+  group: refresh-playlist
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -12,18 +16,18 @@ jobs:
       contents: write
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
 
       - name: Generate playlist
         run: python cdnlivetv_m3u.py
 
-      - name: Commit updated playlist
+      - name: Commit and push updated playlist
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -32,7 +36,11 @@ jobs:
 
           if git diff --cached --quiet; then
             echo "No changes to commit"
-          else
-            git commit -m "chore: refresh playlist"
-            git push
+            exit 0
           fi
+
+          git commit -m "chore: refresh playlist"
+
+          # Incorporate any newer commit on GitHub before pushing
+          git pull --rebase origin main
+          git push origin HEAD:main
