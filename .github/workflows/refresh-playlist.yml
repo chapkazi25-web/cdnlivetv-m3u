@@ -39,7 +39,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore: refresh playlist"
+          git commit -m "update token: cdnlivetv_english.m3u8"
 
           # Incorporate any newer commit on GitHub before pushing
           git pull --rebase origin main
